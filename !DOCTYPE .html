@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromoJeux - Le Comparateur Global</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #e2e8f0;
+            --accent-color: #e94560;
+            --green-promo: #4e9f3d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Zone Admin (Haut à gauche) --- */
+        .admin-zone {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #111827;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #2b3a63;
+        }
+        
+        .admin-auth-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .admin-input {
+            background: #223055;
+            border: 1px solid #2b3a63;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            width: 100px;
+        }
+
+        .admin-btn {
+            background: #2b3a63;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .admin-panel {
+            display: none;
+            margin-top: 10px;
+            max-width: 300px;
+        }
+
+        .admin-panel ul {
+            padding-left: 15px;
+            font-size: 0.85rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        /* --- Bouton Rafraîchir (Haut à droite) --- */
+        .refresh-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid #2b3a63;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #223055;
+            border-color: var(--accent-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 60px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* --- Style de la Pop-up --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .newsletter-container {
+            background-color: var(--card-bg);
+            max-width: 500px;
+            width: 90%;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .newsletter-form input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: none;
+            background: #223055;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .privacy-box {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin: 15px 0;
+            text-align: left;
+            max-height: 80px;
+            overflow-y: scroll;
+            border: 1px solid #2b3a63;
+            padding: 8px;
+            background: #111827;
+        }
+
+        .accept-container {
+            font-size: 0.85rem;
+            margin: 15px 0;
+        }
+
+        .submit-btn {
+            background-color: var(--green-promo);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 90%;
+        }
+
+        /* --- Grille et Cartes --- */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        #search-input {
+            width: 60%;
+            max-width: 500px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px 0 0 25px;
+            background-color: #223055;
+            color: white;
+            outline: none;
+        }
+
+        #search-btn {
+            padding: 12px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0 25px 25px 0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .grid-deals {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .game-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+
+        .expiry-date {
+            font-size: 0.8rem;
+            color: #a7f3d0;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .retail-price {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .sale-price {
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .discount-tag {
+            background-color: var(--green-promo);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+        }
+
+        .buy-btn {
+            display: block;
+            text-align: center;
+            background-color: #2b3a63;
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+
+        .loader {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 50px;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-zone">
+        <div class="admin-auth-container" id="admin-auth-box">
+            <input type="password" id="admin-password-input" class="admin-input" placeholder="Code Admin">
+            <button class="admin-btn" onclick="checkAdminCode()">OK</button>
+        </div>
+        
+        <div id="admin-panel" class="admin-panel">
+            <h4 style="margin: 0 0 10px 0;">Données enregistrées :</h4>
+            <ul id="emails-list" style="margin-bottom: 10px;"></ul>
+            <button onclick="closeAdmin()" style="background:#e94560; border:none; color:white; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Déconnexion</button>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshPage()">🔄 Actualiser les offres</button>
+
+    <div id="popup-overlay" class="modal-overlay">
+        <div class="newsletter-container">
+            <button class="close-modal-btn" onclick="closePopup()">&times;</button>
+            <h3>🔑 Créer un compte d'alertes</h3>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Accédez aux meilleures offres avant tout le monde</p>
+            
+            <form class="newsletter-form" onsubmit="saveUserData(event)">
+                <input type="email" id="user-email" placeholder="Votre adresse e-mail" required><br>
+                <input type="password" id="user-pass" placeholder="Créez un mot de passe pour ce site" required>
+                
+                <div class="privacy-box">
+                    <strong>Politique de confidentialité :</strong> En soumettant ce formulaire, vous acceptez que votre adresse e-mail et votre mot de passe associé soient enregistrés localement sur cette application. Ces informations sont uniquement stockées à des fins de démonstration technique et ne seront pas partagées avec des tiers sans votre consentement préalable, conformément au RGPD.
+                </div>
+
+                <div class="accept-container">
+                    <input type="checkbox" id="accept-policy" required>
+                    <label for="accept-policy">J'accepte la politique de confidentialité</label>
+                </div>
+
+                <button type="submit" class="submit-btn">S'abonner et Accepter</button>
+            </form>
+        </div>
+    </div>
+
+    <header>
+        <h1>🎮 PromoJeux</h1>
+        <p>Les meilleures promos de jeux vidéo (Indés et AAA) mis à jour en direct</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Rechercher un jeu...">
+        <button id="search-btn" onclick="fetchDeals(true)">Rechercher</button>
+    </div>
+
+    <div id="loader" class="loader" style="display: none;">Chargement des données fraîches...</div>
+    <div class="grid-deals" id="deals-container"></div>
+
+    <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #111827; color: white; padding: 15px 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: space-between; align-items: center; box-sizing: border-box; font-size: 0.9rem;">
+        <div style="max-width: 70%; text-align: left;">
+            Ce site utilise des cookies pour personnaliser les publicités et soutenir le fonctionnement gratuit du comparateur.
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="setCookieChoice(false)" style="background: #2b3a63; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Refuser</button>
+            <button onclick="setCookieChoice(true)" style="background: #4e9f3d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Accepter</button>
+        </div>
+    </div>
+
+    <script>
+        const storeNames = { "1": "Steam", "2": "GamersGate", "3": "GreenManGaming", "7": "GOG", "11": "Epic Games", "25": "Humble Store" };
+
+        // --- GESTION DU RAFRAÎCHISSEMENT ---
+        function refreshPage() {
+            document.getElementById('search-input').value = ""; // Réinitialise la recherche
+            fetchDeals(false); // Recharge les dernières offres en direct
+        }
+
+        // --- GESTION DE LA FENÊTRE POP-UP ---
+        function openPopup() {
+            document.getElementById('popup-overlay').style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('popup-overlay').style.display = 'none';
+        }
+
+        // --- GESTION DES COOKIES ---
+        function checkCookieConsent() {
+            const consent = localStorage.getItem('cookieConsent');
+            if (consent === null) {
+                document.getElementById('cookie-banner').style.display = 'flex';
+            }
+        }
+
+        function setCookieChoice(isAccepted) {
+            localStorage.setItem('cookieConsent', isAccepted);
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+
+        // --- GESTION DU STOCKAGE DES UTILISATEURS ---
+        function saveUserData(event) {
+            event.preventDefault();
+            const email = document.getElementById('user-email').value;
+            const pass = document.getElementById('user-pass').value;
+
+            let usersList = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+            usersList.push({ email: email, code: pass });
+            localStorage.setItem('registeredUsers', JSON.stringify(usersList));
+
+            alert("Inscription réussie ! Vos informations ont été enregistrées localement.");
+            document.querySelector('.newsletter-form').reset();
+            closePopup();
+        }
+
+        // --- VÉRIFICATION DU CODE ADMIN ---
+        function checkAdminCode() {
+            const enteredCode = document.getElementById('admin-password-input').value;
+            if (enteredCode === "56789") {
+                document.getElementById('admin-auth-box').style.display = 'none';
+                const panel = document.getElementById('admin-panel');
+                const list = document.getElementById('emails-list');
+                
+                list.innerHTML = "";
+                panel.style.display = "block";
+
+                let usersList = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+                if (usersList.length === 0) {
+                    list.innerHTML = "<li>Aucun utilisateur enregistré.</li>";
+                } else {
+                    usersList.forEach(user => {
+                        let li = document.createElement('li');
+                        li.innerHTML = `<strong>Email:</strong> ${user.email} <br> <strong>MDP:</strong> ${user.code}`;
+                        li.style.marginBottom = "10px";
+                        list.appendChild(li);
+                    });
+                }
+            } else {
+                alert("Code admin incorrect !");
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-panel').style.display = "none";
+            document.getElementById('admin-password-input').value = "";
+            document.getElementById('admin-auth-box').style.display = 'flex';
+        }
+
+        // --- RÉCUPÉRATION DES OFFRES ET DATE D'EXPIRATION ---
+        async function fetchDeals(isSearch = false) {
+            const container = document.getElementById('deals-container');
+            const loader = document.getElementById('loader');
+            const searchQuery = document.getElementById('search-input').value;
+
+            container.innerHTML = "";
+            loader.style.display = "block";
+
+            // Chargement d'un grand nombre d'offres (incluant les indépendants)
+            let url = "https://www.cheapshark.com/api/1.0/deals?pageSize=100&sortBy=Efficiency";
+            if (isSearch && searchQuery.trim() !== "") {
+                url = `https://www.cheapshark.com/api/1.0/deals?pageSize=50&title=${encodeURIComponent(searchQuery)}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                const deals = await response.json();
+                loader.style.display = "none";
+
+                if(deals.length === 0) {
+                    container.innerHTML = "<p style='text-align:center; width:100%;'>Aucun résultat.</p>";
+                    return;
+                }
+
+                deals.forEach(deal => {
+                    const store = storeNames[deal.storeID] || "Boutique PC";
+                    const discount = Math.round(deal.savings);
+                    
+                    // Gestion et conversion de la date d'expiration (si présente)
+                    let dateTexte = "Fin de la promo : Non spécifiée";
+                    if (deal.expiry && deal.expiry !== "0") {
+                        // L'API renvoie un timestamp Unix, on le convertit en date lisible en français
+                        const dateExpiration = new Date(deal.expiry * 1000);
+                        dateTexte = "Expire le : " + dateExpiration.toLocaleDateString('fr-FR');
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img class="card-img" src="${deal.thumb}" alt="${deal.title}" onerror="this.src='https://via.placeholder.com/300x140?text=Image+Indisponible'">
+                        <div class="card-content">
+                            <div>
+                                <h3 class="game-title">${deal.title}</h3>
+                                <div class="expiry-date">📅 ${dateTexte}</div>
+                                <span style="font-size:0.85rem; color:#94a3b8;">Disponible sur : <strong>${store}</strong></span>
+                            </div>
+                            <div>
+                                <div class="price-row">
+                                    <div>
+                                        <span class="retail-price">${deal.normalPrice} $</span>
+                                        <div class="sale-price">${deal.salePrice} $</div>
+                                    </div>
+                                    <div class="discount-tag">-${discount}%</div>
+                                </div>
+                                <a href="https://www.cheapshark.com/redirect?dealID=${deal.dealID}" target="_blank" class="buy-btn">Voir l'offre</a>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                loader.style.display = "none";
+                console.error(error);
+            }
+        }
+
+        window.onload = () => {
+            fetchDeals(false);
+            openPopup();
+            checkCookieConsent();
+        };
+    </script>
+</body>
+</html>
